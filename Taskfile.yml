@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  oapi-help:
+    desc: Génère le code serveur de l'API à partir des spécifications OpenAPI.
+    cmds:
+      - go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest --config=./openapi/spec/server-conf.yaml ./openapi/spec/api.yaml

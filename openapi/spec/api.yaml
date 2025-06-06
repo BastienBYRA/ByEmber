@@ -1,0 +1,199 @@
+openapi: '3.0.4'
+
+info:
+  title: ByEmber API
+  version: '1.0'
+  description: A Secret Sharer, Open Source, free, and with everything you need.
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit
+
+servers:
+  - url: /
+
+security:
+  - BearerJWT: []
+
+paths:
+  /secret:
+    post:
+      summary: Create a secret
+      description: |
+        Create a secret, auto-generating an ID that will be used to read it.
+      operationId: CreateSecret
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Secret"
+            example:
+              content: my super secretive content
+              password: admin
+              views: 10
+              duration: 3600
+      responses:
+        '201':
+          description: Secret successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecretCreated"
+              example:
+                id: "123e4567-e89b-12d3-a456-426614174000"
+                expires_at: "2024-12-25T10:30:00Z"
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/Error"
+        '401':
+          $ref: '#/components/responses/UnauthorizedAccessError'
+
+  /secret/{id}:
+    get:
+      summary: Retrieve a secret
+      description: |
+        Retrieve a secret by its ID. This operation decrements the view count.
+        If the secret requires a password, it must be provided in the request body.
+      operationId: GetSecret
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The UUID of the secret
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  description: Password to access the secret (if required)
+            example:
+              password: admin
+      responses:
+        '200':
+          description: Secret successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecretResponse"
+        '401':
+          $ref: '#/components/responses/UnauthorizedAccessError'
+        '403':
+          description: Invalid password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '404':
+          description: Secret not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '410':
+          description: Secret has no remaining views
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete a secret
+      description: |
+        Delete a secret by its ID. This operation is irreversible.
+      operationId: DeleteSecret
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The UUID of the secret
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Secret successfully deleted
+        '401':
+          $ref: '#/components/responses/UnauthorizedAccessError'
+        '404':
+          description: Secret not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+
+
+components:
+  securitySchemes:
+    BearerJWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    UnauthorizedAccessError:
+      description: Access token is missing or invalid
+
+  schemas:
+    Secret:
+      type: object
+      properties:
+        content:
+          type: string
+          description: => Secret content
+        password:
+          type: string
+          description: => Password to access the secret
+        views:
+          type: integer
+          description: => Remaining views before deleting the secret
+        duration:
+          type: integer
+          description: => Seconds left before auto deleting the secret
+    SecretResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the secret
+        content:
+          type: string
+          description: Secret content
+        views:
+          type: integer
+          description: Remaining views before deleting the secret
+        duration:
+          type: integer
+          description: Seconds left before auto-deleting the secret
+        created_at:
+          type: string
+          format: date-time
+          description: When the secret was created
+    SecretCreated:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the secret
+        expires_at:
+          type: string
+          format: date-time
+          description: When the secret will expire
+    Error:
+      type: object
+      properties:
+        error:
+          type: integer
+        detail:
+          type: string
