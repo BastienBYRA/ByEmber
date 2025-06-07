@@ -21,52 +21,58 @@ const (
 	BearerJWTScopes = "BearerJWT.Scopes"
 )
 
-// Error defines model for Error.
+// Error Represents an error returned by the API.
+// Contains the HTTP status code and a human-readable message.
 type Error struct {
-	Detail *string `json:"detail,omitempty"`
-	Error  *int    `json:"error,omitempty"`
+	// Message Description of the error
+	Message *string `json:"message,omitempty"`
+
+	// Status HTTP status code corresponding to the error
+	Status *int `json:"status,omitempty"`
 }
 
 // Secret defines model for Secret.
 type Secret struct {
 	// Content => Secret content
-	Content *string `json:"content,omitempty"`
+	Content string `json:"content"`
+
+	// CreatedAt When the secret was created
+	CreatedAt *time.Time `json:"created_at,omitempty"`
 
 	// Duration => Seconds left before auto deleting the secret
-	Duration *int `json:"duration,omitempty"`
+	Duration int `json:"duration"`
+
+	// Id Unique identifier of the secret
+	Id *openapi_types.UUID `json:"id,omitempty"`
 
 	// Password => Password to access the secret
 	Password *string `json:"password,omitempty"`
 
 	// Views => Remaining views before deleting the secret
-	Views *int `json:"views,omitempty"`
+	Views int `json:"views"`
 }
 
-// SecretCreated defines model for SecretCreated.
+// SecretCreated Response object returned after creating a secret.
+// Contains the URL that can be used to access the secret.
 type SecretCreated struct {
-	// ExpiresAt When the secret will expire
-	ExpiresAt *time.Time `json:"expires_at,omitempty"`
-
-	// Id Unique identifier of the secret
-	Id *openapi_types.UUID `json:"id,omitempty"`
+	// Url URL to the secret
+	Url *string `json:"url,omitempty"`
 }
 
-// SecretResponse defines model for SecretResponse.
-type SecretResponse struct {
-	// Content Secret content
-	Content *string `json:"content,omitempty"`
+// SecretRequest Represents the user-provided input when creating a secret.
+// This object does not include system-generated values like ID or timestamps.
+type SecretRequest struct {
+	// Content => Secret content
+	Content string `json:"content"`
 
-	// CreatedAt When the secret was created
-	CreatedAt *time.Time `json:"created_at,omitempty"`
+	// Duration => Seconds left before auto deleting the secret
+	Duration int `json:"duration"`
 
-	// Duration Seconds left before auto-deleting the secret
-	Duration *int `json:"duration,omitempty"`
+	// Password => Password to access the secret
+	Password *string `json:"password,omitempty"`
 
-	// Id Unique identifier of the secret
-	Id *openapi_types.UUID `json:"id,omitempty"`
-
-	// Views Remaining views before deleting the secret
-	Views *int `json:"views,omitempty"`
+	// Views => Remaining views before deleting the secret
+	Views int `json:"views"`
 }
 
 // GetSecretJSONBody defines parameters for GetSecret.
@@ -76,7 +82,7 @@ type GetSecretJSONBody struct {
 }
 
 // CreateSecretJSONRequestBody defines body for CreateSecret for application/json ContentType.
-type CreateSecretJSONRequestBody = Secret
+type CreateSecretJSONRequestBody = SecretRequest
 
 // GetSecretJSONRequestBody defines body for GetSecret for application/json ContentType.
 type GetSecretJSONRequestBody GetSecretJSONBody
@@ -389,7 +395,7 @@ type GetSecretResponseObject interface {
 	VisitGetSecretResponse(w http.ResponseWriter) error
 }
 
-type GetSecret200JSONResponse SecretResponse
+type GetSecret200JSONResponse Secret
 
 func (response GetSecret200JSONResponse) VisitGetSecretResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")

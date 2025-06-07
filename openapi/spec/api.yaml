@@ -26,7 +26,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Secret"
+              $ref: "#/components/schemas/SecretRequest"
             example:
               content: my super secretive content
               password: admin
@@ -84,7 +84,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SecretResponse"
+                $ref: "#/components/schemas/Secret"
         '401':
           $ref: '#/components/responses/UnauthorizedAccessError'
         '403':
@@ -144,56 +144,65 @@ components:
       description: Access token is missing or invalid
 
   schemas:
-    Secret:
+    SecretRequest:
+      description: |
+        Represents the user-provided input when creating a secret.
+        This object does not include system-generated values like ID or timestamps.
       type: object
       properties:
         content:
           type: string
           description: => Secret content
-        password:
-          type: string
-          description: => Password to access the secret
         views:
           type: integer
           description: => Remaining views before deleting the secret
         duration:
           type: integer
           description: => Seconds left before auto deleting the secret
-    SecretResponse:
-      type: object
-      properties:
-        id:
+        password:
           type: string
-          format: uuid
-          description: Unique identifier of the secret
-        content:
-          type: string
-          description: Secret content
-        views:
-          type: integer
-          description: Remaining views before deleting the secret
-        duration:
-          type: integer
-          description: Seconds left before auto-deleting the secret
-        created_at:
-          type: string
-          format: date-time
-          description: When the secret was created
+          description: => Password to access the secret
+      required:
+        - content
+        - views
+        - duration
+
+    Secret:
+      description: |
+        Represents the fully constructed secret as stored and managed by the application.
+        Includes system-generated fields such as ID and creation timestamp.
+      allOf:
+        - $ref: '#/components/schemas/SecretRequest'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Unique identifier of the secret
+            created_at:
+              type: string
+              format: date-time
+              description: When the secret was created
+
     SecretCreated:
+      description: |
+        Response object returned after creating a secret.
+        Contains the URL that can be used to access the secret.
       type: object
       properties:
-        id:
+        url:
           type: string
-          format: uuid
-          description: Unique identifier of the secret
-        expires_at:
-          type: string
-          format: date-time
-          description: When the secret will expire
+          description: URL to the secret
+
     Error:
+      description: |
+        Represents an error returned by the API.
+        Contains the HTTP status code and a human-readable message.
       type: object
       properties:
-        error:
+        status:
           type: integer
-        detail:
+          description: HTTP status code corresponding to the error
+        message:
           type: string
+          description: Description of the error

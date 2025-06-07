@@ -9,7 +9,7 @@ import (
 )
 
 type Server struct {
-	secretHandler *secret.Handler
+	secretHandler *secret.SecretHandler
 }
 
 func NewServer() *Server {
