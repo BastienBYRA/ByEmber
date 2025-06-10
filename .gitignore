@@ -31,5 +31,8 @@ go.work.sum
 # .idea/
 # .vscode/
 
-# Added
+# SQLite DB
+*.db
+
+# File to complete before publishing
 TODO.MD

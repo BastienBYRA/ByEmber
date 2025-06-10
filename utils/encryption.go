@@ -15,11 +15,11 @@ type EncryptionService struct {
 	EncryptionKey []byte
 }
 
-func NewService() *EncryptionService {
+func NewEncryptionService() *EncryptionService {
 	var service EncryptionService
 	existingKey := os.Getenv("BYEMBER_ENCRYPTION_KEY")
 
-	if strings.TrimSpace(existingKey) == "" {
+	if strings.TrimSpace(existingKey) != "" {
 		service.EncryptionKey = []byte(existingKey)
 	} else {
 		service.GenerateKey()
