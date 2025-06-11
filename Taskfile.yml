@@ -4,6 +4,7 @@ tasks:
   run:
     desc: Start the Go project
     cmd: go run cmd/main.go
+    
   oapi-gen:
     desc: Generates the API server code from the OpenAPI specification.
     cmds:

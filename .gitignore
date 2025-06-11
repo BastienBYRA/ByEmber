@@ -34,5 +34,8 @@ go.work.sum
 # SQLite DB
 *.db
 
+# Auto generated encryption key
+byember_encryption_key.txt
+
 # File to complete before publishing
 TODO.MD

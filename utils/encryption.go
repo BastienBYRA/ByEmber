@@ -7,7 +7,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -19,21 +21,47 @@ func NewEncryptionService() *EncryptionService {
 	var service EncryptionService
 	existingKey := os.Getenv("BYEMBER_ENCRYPTION_KEY")
 
+	// If the user give the encryption key
 	if strings.TrimSpace(existingKey) != "" {
 		service.EncryptionKey = []byte(existingKey)
-	} else {
-		service.GenerateKey()
+		return &service
 	}
+
+	// If not
+	key, err := service.GenerateKey()
+	if err != nil {
+		log.Fatal(err)
+	}
+	service.EncryptionKey = key
+
+	saveKey := os.Getenv("BYEMBER_ENCRYPTION_CREATE_ANONYMOUS_KEY")
+	saveKeyBool := false
+
+	if strings.TrimSpace(saveKey) != "" {
+		saveKeyBool, err = strconv.ParseBool(saveKey)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if !saveKeyBool {
+		encodedKey := base64.StdEncoding.EncodeToString(key)
+		err = os.WriteFile("byember_encryption_key.txt", []byte(encodedKey), 0600)
+		if err != nil {
+			log.Fatal("failed to save key:", err)
+		}
+	}
+
 	return &service
 }
 
-func (e *EncryptionService) GenerateKey() (bool, error) {
+func (e *EncryptionService) GenerateKey() ([]byte, error) {
 	key := make([]byte, 32)
 	if _, err := rand.Read(key); err != nil {
-		return false, err
+		return nil, err
 	}
 	e.EncryptionKey = key
-	return true, nil
+	return key, nil
 }
 
 func (e *EncryptionService) Encrypt(plaintext []byte) (string, error) {
