@@ -59,6 +59,22 @@ func (h *SecretHandler) DeleteSecret(w http.ResponseWriter, r *http.Request, id 
 	// Traitement de suppression
 }
 
+// (GET /secret/{id})
 func (h *SecretHandler) GetSecret(w http.ResponseWriter, r *http.Request, id uuid.UUID) {
-	// Traitement de récupération
+	ctx := r.Context()
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "Unauthorized method.", http.StatusMethodNotAllowed)
+		return
+	}
+
+	fmt.Println(id)
+
+	secret, err := h.service.GetSecret(ctx, id.String())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(secret)
 }
