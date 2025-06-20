@@ -66,7 +66,6 @@ func (e *EncryptionService) GenerateKey() ([]byte, error) {
 
 func (e *EncryptionService) Encrypt(plaintext []byte) (string, error) {
 	key := []byte(e.EncryptionKey)
-	fmt.Println(key)
 
 	block, err := aes.NewCipher(key)
 	if err != nil {

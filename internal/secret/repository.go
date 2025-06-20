@@ -68,3 +68,50 @@ func (r *SecretRepository) GetSecret(ctx context.Context, id string) (*autogener
 
 	return &s, nil
 }
+
+func (r *SecretRepository) DeleteSecret(ctx context.Context, id string) error {
+	query := `
+		DELETE FROM secrets
+		WHERE id = ?
+	`
+
+	result, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no secret found with id %s", id)
+	}
+
+	return nil
+}
+
+func (r *SecretRepository) ReduceViewCountSecret(ctx context.Context, id string) error {
+	query := `
+		UPDATE secrets
+		SET views = views - 1
+		WHERE id = ? AND views > 0
+	`
+
+	result, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no rows updated: either secret not found or views already zero")
+	}
+
+	return nil
+}
