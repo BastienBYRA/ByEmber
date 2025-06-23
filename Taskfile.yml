@@ -1,12 +1,57 @@
 version: '3'
 
 tasks:
+  default:
+    desc: Run the application (default task)
+    cmds:
+      - task: run
+
   run:
-    desc: Start the Go project
+    deps:
+      - fmt
+      - vet
+    desc: Run the Go application
     cmd: go run cmd/main.go
-    
-  oapi-gen:
-    desc: Generates the API server code from the OpenAPI specification.
+
+  fmt:
+    desc: Format the Go source code
+    cmd: go fmt ./...
+
+  vet:
+    deps:
+      - fmt
+    desc: Analyze the code for potential issues
+    cmd: go vet ./...
+
+  test:
+    deps:
+      - fmt
+      - vet
+    desc: Run the test suite
+    cmd: go test ./...
+
+  build:
+    desc: Compile the Go application
+    deps:
+      - fmt
+      - vet
+    cmd: go build -o bin/byember cmd/main.go
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf bin/
+
+  deps-install:
+    desc: Download Go module dependencies
+    cmd: go mod tidy
+
+  oapi-gen-server:
+    desc: Generate API server code from the OpenAPI specification
     cmds:
       - go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest --config=./openapi/spec/server-conf.yaml ./openapi/spec/api.yaml
-  
+
+  generate:
+    desc: Run all code generation steps
+    cmds:
+      - task: oapi-gen-server
