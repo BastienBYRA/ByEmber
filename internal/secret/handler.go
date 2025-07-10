@@ -72,9 +72,9 @@ func (h *SecretHandler) GetSecret(w http.ResponseWriter, r *http.Request, id uui
 	json.NewDecoder(r.Body).Decode(&data)
 	password := data["password"]
 
-	secret, err := h.service.GetSecret(ctx, id.String(), password)
+	secret, code, err := h.service.GetSecret(ctx, id.String(), password)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, err.Error(), code)
 	}
 
 	w.WriteHeader(http.StatusOK)
