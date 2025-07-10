@@ -66,9 +66,6 @@ func (s *SecretService) GetSecret(context context.Context, id string, password s
 	}
 
 	// Check if the password is valid (whether if the secret need a password or not, and if it's match the secret password)
-	if hashPassword == "" && *secret.Password == "" {
-		return secret, http.StatusOK, nil
-	}
 	if hashPassword == "" && *secret.Password != "" {
 		return nil, http.StatusNotFound, errors.New("the secret requires a password, please provide one")
 	}
