@@ -93,3 +93,11 @@ func (s *SecretService) GetSecret(context context.Context, id string, password s
 	// TODO: Should only return the content of the secret
 	return secret, http.StatusOK, nil
 }
+
+func (s *SecretService) DeleteSecret(context context.Context, id uuid.UUID) (int, error) {
+	err := s.secretRepository.DeleteSecret(context, id.String())
+	if err != nil {
+		return http.StatusNotFound, err
+	}
+	return http.StatusNoContent, nil
+}

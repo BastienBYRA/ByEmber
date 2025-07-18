@@ -55,8 +55,21 @@ func (h *SecretHandler) CreateSecret(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(secretCreated)
 }
 
+// (DELETE /secret/{id})
 func (h *SecretHandler) DeleteSecret(w http.ResponseWriter, r *http.Request, id uuid.UUID) {
-	// Traitement de suppression
+	ctx := r.Context()
+
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Unauthorized method.", http.StatusMethodNotAllowed)
+		return
+	}
+
+	code, err := h.service.DeleteSecret(ctx, id)
+	if err != nil {
+		http.Error(w, err.Error(), code)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // (GET /secret/{id})
