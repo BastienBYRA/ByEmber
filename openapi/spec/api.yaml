@@ -129,7 +129,73 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /user/api-key:
+    post:
+      summary: Generate an API Key
+      description: |
+        Generate an API Key with specific permissions (Permissions are not implemented yet; as of right now, a Key has full permissions).
 
+        List of all permissions :
+          - CreateSecret
+          - GetSecret
+          - DeleteSecret
+      operationId: GenerateApiKey
+      security:
+        - BearerJWT: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiKeyRequest"
+            example:
+              # permissions: [GetSecret, DeleteSecret, FullSecret]
+              duration: 3600
+      responses:
+        '201':
+          description: API Key successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeyCreated"
+              example:
+                id: "123e4567-e89b-12d3-a456-426614174000"
+                key: "fadc4d0d7d7ca8acad97e92c7e25ef26ffe288d5356ec79a98766437371a3029"
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema: 
+                $ref: "#/components/schemas/Error"
+        '401':
+          $ref: '#/components/responses/UnauthorizedAccessError'
+  /user/api-key/{id}:
+    delete:
+      summary: Delete an API Key
+      description: |
+        Delete an API Key by its ID. This operation is irreversible.
+      operationId: DeleteApiKey
+      security:
+        - BearerJWT: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The UUID of the API Key
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: API Key successfully deleted
+        '401':
+          $ref: '#/components/responses/UnauthorizedAccessError'
+        '404':
+          description: API Key not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"      
 
 
 components:
@@ -138,6 +204,11 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY # TODO: Check whether we should use X-API-KEY or Authorization
+
 
   responses:
     UnauthorizedAccessError:
@@ -156,12 +227,16 @@ components:
         views:
           type: integer
           description: => Remaining views before deleting the secret
+          nullable: true
         duration:
           type: integer
           description: => Seconds left before auto deleting the secret
+          nullable: true
         password:
           type: string
+          format: password
           description: => Password to access the secret
+          nullable: true
       required:
         - content
         - views
@@ -194,6 +269,52 @@ components:
           type: string
           description: URL to the secret
 
+    ApiKeyRequest:
+      description: |
+        TODO:
+      type: object
+      properties:
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permissions'
+          nullable: true
+
+    ApiKey:
+      description: |
+        Represents the fully constructed API Key as stored and managed by the application.
+        Includes system-generated fields such as ID and creation timestamp.
+      allOf:
+        - $ref: '#/components/schemas/ApiKeyRequest'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Unique identifier of the secret
+            created_at:
+              type: string
+              format: date-time
+              description: When the secret was created
+
+    ApiKeyCreated:
+      description: |
+        Response object returned after creating an API Key.
+        Return the API Key.
+      type: object
+      properties:
+        apikey:
+          type: string
+
+    Permissions:
+      type: string
+      enum:
+        - CreateSecret
+        - GetSecret
+        - DeleteSecret
+        - FullSecret
+        - UpdateSecret
+      
     Error:
       description: |
         Represents an error returned by the API.
